@@ -329,8 +329,8 @@ impl<'a> Core<'a> {
                 arguments_kw,
                 res,
             } => send::publish(self, uri, options, arguments, arguments_kw, res).await,
-            Request::Register { uri, res, func_ptr } => {
-                send::register(self, uri, res, func_ptr).await
+            Request::Register { uri, options, res, func_ptr } => {
+                send::register(self, uri, options, res, func_ptr).await
             }
             Request::Unregister { rpc_id, res } => send::unregister(self, rpc_id, res).await,
             Request::InvocationResult { request, res } => {

@@ -3,9 +3,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use lazy_static::*;
 
-use wamp_async::{
-    Client, ClientConfig, ClientState, SerializerType, WampArgs, WampError, WampKwArgs,
-};
+use wamp_async::{Client, ClientConfig, ClientState, SerializerType, WampArgs, WampDict, WampError, WampKwArgs};
 
 lazy_static! {
     static ref RPC_CALL_COUNT: AtomicU64 = AtomicU64::new(0);
@@ -103,8 +101,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .await?;
 
     // Register our functions to a uri
-    let echo_rpc_id = client.register("peer.echo", echo).await?;
-    let strict_echo_rpc_id = client.register("peer.strict_echo", strict_echo).await?;
+    let echo_rpc_id = client.register("peer.echo", WampDict::new(), echo).await?;
+    let strict_echo_rpc_id = client.register("peer.strict_echo", WampDict::new(),strict_echo).await?;
 
     println!("Waiting for 'peer.echo' to be called at least 4 times");
     loop {

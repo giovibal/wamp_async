@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::sync::{Arc, RwLock};
 
-use wamp_async::{Client, ClientConfig, SerializerType, WampArgs, WampKwArgs};
+use wamp_async::{Client, ClientConfig, SerializerType, WampArgs, WampDict, WampKwArgs};
 
 #[derive(Debug)]
 struct MyState {
@@ -33,7 +33,7 @@ fn echo_with_context(
                 }
                 // We can asynchronously perform any other WAMP action,
                 // e.g. recursively call ourselves.
-                wamp_client.call("peer.echo", None, None).await.unwrap();
+                wamp_client.call("peer.echo", WampDict::new(),None, None).await.unwrap();
 
                 Ok((args, kwargs))
             })
@@ -86,6 +86,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     client
         .register(
             "peer.echo",
+            WampDict::new(),
             echo_with_context(Arc::clone(&client), Arc::new(RwLock::new(my_state))),
         )
         .await?;

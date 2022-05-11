@@ -1,5 +1,5 @@
 use std::error::Error;
-use wamp_async::{Client, ClientConfig, WampDict};
+use wamp_async::{Arg, Client, ClientConfig, WampDict};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -25,7 +25,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // If one of the args is "pub", start as a publisher
     if let Some(_) = std::env::args().find(|a| a == "pub") {
         loop {
-            match client.publish("peer.heartbeat", None, None, true).await {
+            let options = WampDict::from([("acnowledge".to_string(), Arg::Bool(true))]);
+            match client.publish("peer.heartbeat", options, None, None).await {
                 Ok(pub_id) => println!("\tSent event id {}", pub_id.unwrap()),
                 Err(e) => {
                     println!("publish error {}", e);

@@ -40,6 +40,7 @@ pub enum Request<'a> {
     },
     Register {
         uri: WampString,
+        options: WampDict,
         res: PendingRegisterResult,
         func_ptr: RpcFunc<'a>,
     },
@@ -277,6 +278,7 @@ pub async fn publish(
 pub async fn register<'a>(
     core: &mut Core<'a>,
     uri: WampString,
+    options: WampDict,
     res: PendingRegisterResult,
     func_ptr: RpcFunc<'a>,
 ) -> Status {
@@ -286,7 +288,7 @@ pub async fn register<'a>(
         .send(&Msg::Register {
             request,
             procedure: uri,
-            options: WampDict::new(),
+            options,
         })
         .await
     {

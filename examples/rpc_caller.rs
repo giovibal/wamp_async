@@ -2,9 +2,7 @@ use std::error::Error;
 
 use serde::{Deserialize, Serialize};
 
-use wamp_async::{
-    try_into_any_value, Client, ClientConfig, ClientRole, SerializerType, WampKwArgs,
-};
+use wamp_async::{try_into_any_value, Client, ClientConfig, ClientRole, SerializerType, WampKwArgs, WampDict};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct MyStruct {
@@ -66,7 +64,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             "Calling 'peer.echo' with {:?} and {:?}",
             send_args, send_kwargs
         );
-        match client.call("peer.echo", send_args, send_kwargs).await {
+        match client.call("peer.echo", WampDict::new(), send_args, send_kwargs).await {
             Ok((res_args, res_kwargs)) => {
                 println!("\tGot {:?} {:?}", res_args, res_kwargs);
                 assert_eq!(res_args, send_args_copy);

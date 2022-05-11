@@ -458,16 +458,24 @@ impl<'a> Client<'a> {
     pub async fn publish<T: AsRef<str>>(
         &self,
         topic: T,
+        options: WampDict,
         arguments: Option<WampArgs>,
         arguments_kw: Option<WampKwArgs>,
-        acknowledge: bool,
+        // acknowledge: bool,
     ) -> Result<Option<WampId>, WampError> {
-        let mut options = WampDict::new();
-
-        if acknowledge {
-            options.insert("acknowledge".to_string(), Arg::Bool(true));
-        }
+        // let mut options = WampDict::new();
+        // if acknowledge {
+        //     options.insert("acknowledge".to_string(), Arg::Bool(true));
+        // }
         // Send the request
+
+        let mut acknowledge = false;
+        if options.contains_key("acknowledge") {
+            if let Arg::Bool(true) = options.get("acknowledge").unwrap() {
+                acknowledge = true;
+            }
+        }
+
         let (res, result) = oneshot::channel();
         if let Err(e) = self.ctl_channel.send(Request::Publish {
             uri: topic.as_ref().to_string(),
@@ -481,6 +489,8 @@ impl<'a> Client<'a> {
                 e
             )));
         }
+
+
 
         let pub_id = if acknowledge {
             // Wait for the acknowledgement
@@ -497,13 +507,14 @@ impl<'a> Client<'a> {
         } else {
             None
         };
+
         Ok(pub_id)
     }
 
     /// Register an RPC endpoint. Upon succesful registration, a registration ID is returned (used to unregister)
     /// and calls received from the server will generate a future which will be sent on the rpc event channel
     /// returned by the call to [event_loop()](struct.Client.html#method.event_loop)
-    pub async fn register<T, F, Fut>(&self, uri: T, func_ptr: F) -> Result<WampId, WampError>
+    pub async fn register<T, F, Fut>(&self, uri: T, options: WampDict, func_ptr: F) -> Result<WampId, WampError>
     where
         T: AsRef<str>,
         F: Fn(Option<WampArgs>, Option<WampKwArgs>) -> Fut + Send + Sync + 'a,
@@ -513,6 +524,7 @@ impl<'a> Client<'a> {
         let (res, result) = oneshot::channel();
         if let Err(e) = self.ctl_channel.send(Request::Register {
             uri: uri.as_ref().to_string(),
+            options,
             res,
             func_ptr: Box::new(move |a, k| Box::pin(func_ptr(a, k))),
         }) {
@@ -565,6 +577,7 @@ impl<'a> Client<'a> {
     pub async fn call<T: AsRef<str>>(
         &self,
         uri: T,
+        options: WampDict,
         arguments: Option<WampArgs>,
         arguments_kw: Option<WampKwArgs>,
     ) -> Result<(Option<WampArgs>, Option<WampKwArgs>), WampError> {
@@ -572,7 +585,7 @@ impl<'a> Client<'a> {
         let (res, result) = oneshot::channel();
         if let Err(e) = self.ctl_channel.send(Request::Call {
             uri: uri.as_ref().to_string(),
-            options: WampDict::new(),
+            options,
             arguments,
             arguments_kw,
             res,
